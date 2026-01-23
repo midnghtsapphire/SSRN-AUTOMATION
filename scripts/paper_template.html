@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="{{author}}">
+    <meta name="description" content="{{description}}">
+    <meta name="keywords" content="{{keywords}}">
+    <meta name="date" content="{{date}}">
+    <title>{{title}}</title>
+    <style>
+        @page {
+            size: letter;
+            margin: 1in;
+        }
+        
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 12pt;
+            line-height: 2.0;
+            color: #000;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 1in;
+        }
+        
+        h1 {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 0.5em;
+            line-height: 1.5;
+        }
+        
+        h2 {
+            font-size: 14pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 1em;
+            font-style: italic;
+            line-height: 1.5;
+        }
+        
+        .author-info {
+            text-align: center;
+            margin-bottom: 2em;
+            line-height: 1.5;
+        }
+        
+        .author-name {
+            font-weight: bold;
+            margin-bottom: 0.25em;
+        }
+        
+        .author-orcid {
+            font-size: 10pt;
+            margin-bottom: 0.25em;
+        }
+        
+        .author-affiliation {
+            font-style: italic;
+            margin-bottom: 0.25em;
+        }
+        
+        .paper-date {
+            margin-bottom: 0.25em;
+        }
+        
+        .paper-type {
+            font-style: italic;
+            color: #666;
+        }
+        
+        .abstract-section {
+            margin: 2em 0;
+        }
+        
+        .abstract-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 0.5em;
+        }
+        
+        .abstract-text {
+            text-align: justify;
+            margin-bottom: 1em;
+        }
+        
+        .keywords, .jel-codes {
+            margin-bottom: 0.5em;
+        }
+        
+        .keywords strong, .jel-codes strong {
+            font-weight: bold;
+        }
+        
+        h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-top: 2em;
+            margin-bottom: 1em;
+        }
+        
+        p {
+            text-align: justify;
+            margin-bottom: 1em;
+            text-indent: 0.5in;
+        }
+        
+        .no-indent {
+            text-indent: 0;
+        }
+        
+        .section-break {
+            page-break-before: always;
+        }
+    </style>
+</head>
+<body>
+    <!-- Title and Subtitle -->
+    <h1>{{title}}</h1>
+    <h2>{{subtitle}}</h2>
+    
+    <!-- Author Information -->
+    <div class="author-info">
+        <div class="author-name">{{author}}</div>
+        <div class="author-orcid">ORCID: {{orcid}}</div>
+        <div class="author-affiliation">{{affiliation}}</div>
+        <div class="paper-date">{{date}}</div>
+        <div class="paper-type">Working Paper</div>
+    </div>
+    
+    <!-- Abstract Section -->
+    <div class="abstract-section">
+        <div class="abstract-title">Abstract</div>
+        <div class="abstract-text">{{abstract}}</div>
+        <div class="keywords"><strong>Keywords:</strong> {{keywords}}</div>
+        <div class="jel-codes"><strong>JEL Codes:</strong> {{jel_codes}}</div>
+    </div>
+    
+    <!-- Paper Body -->
+    {{body}}
+    
+</body>
+</html>
