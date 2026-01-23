@@ -61,10 +61,12 @@
     "remote_name": "manus_google_drive"
   },
   "github": {
-    "repository": "midnghtsapphire/SSRN_Whitepapers",
-    "automation_repo": "midnghtsapphire/SSRN-AUTOMATION",
-    "local_path": "/home/ubuntu/SSRN_Whitepapers",
-    "private": true
+    "repository": "midnghtsapphire/SSRN-AUTOMATION",
+    "local_path": "/home/ubuntu/SSRN-AUTOMATION",
+    "papers_directory": "output",
+    "store_papers_in_repo": false,
+    "private": true,
+    "note": "Papers stored in output/ directory but not committed to GitHub (see .gitignore)"
   },
   "paper_generation": {
     "model": "gpt-4.1-mini",
@@ -73,14 +75,23 @@
     "human_voice_enforcement": true,
     "remove_ai_artifacts": true
   },
+  "notifications": {
+    "email": "angelreporters@gmail.com",
+    "send_email": true,
+    "create_calendar_event": true,
+    "mcp_servers": {
+      "gmail": "gmail",
+      "google_calendar": "google-calendar"
+    }
+  },
   "workflow_steps": [
     "1. Generate paper content with human voice",
     "2. Create PDF with proper formatting",
     "3. Run quality checker validation",
     "4. Extract metadata and generate CSV",
     "5. Upload to Google Drive",
-    "6. Backup to GitHub repository",
-    "7. Send notifications (email + calendar)"
+    "6. Send notifications (email + calendar)",
+    "7. Store paper in output/ directory (not committed to GitHub)"
   ],
   "best_practices": [
     "Always run quality checker before finalizing",

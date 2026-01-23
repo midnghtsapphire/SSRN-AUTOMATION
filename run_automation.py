@@ -187,19 +187,41 @@ class SSRNAutomation:
         
         return None
     
-    def upload_and_backup(self, pdf_file, metadata_file):
-        """Step 5: Upload to Google Drive and backup to GitHub"""
+    def upload_to_gdrive(self, pdf_file, metadata_file):
+        """Step 5: Upload to Google Drive"""
         self.log(f"\n{'='*60}")
-        self.log("STEP 5: Upload & Backup")
+        self.log("STEP 5: Upload to Google Drive")
         self.log(f"{'='*60}")
         
         result = self.run_script('upload_and_backup.py', [str(pdf_file), str(metadata_file)])
         
         if result.returncode != 0:
-            self.log(f"⚠️  Upload/backup had issues: {result.stderr}")
+            self.log(f"⚠️  Upload had issues: {result.stderr}")
+            return None
+        
+        # Extract Google Drive link from output
+        gdrive_link = None
+        for line in result.stdout.split('\n'):
+            if 'drive.google.com' in line:
+                gdrive_link = line.strip().split()[-1]
+                break
+        
+        self.log(f"✅ Upload complete")
+        return gdrive_link
+    
+    def send_notifications(self, metadata_file, gdrive_link):
+        """Step 6: Send email and calendar notifications"""
+        self.log(f"\n{'='*60}")
+        self.log("STEP 6: Sending Notifications")
+        self.log(f"{'='*60}")
+        
+        result = self.run_script('send_notifications.py', [str(metadata_file), gdrive_link or 'N/A'])
+        
+        if result.returncode != 0:
+            self.log(f"⚠️  Notifications had issues: {result.stderr}")
             return False
         
-        self.log(f"✅ Upload and backup complete")
+        self.log(f"✅ Notifications sent")
         return True
     
     def run_full_workflow(self, topic):
@@ -233,9 +255,14 @@ class SSRNAutomation:
             if not metadata_file:
                 raise Exception("Metadata extraction failed")
             
-            # Step 5: Upload and backup
-            if not self.upload_and_backup(pdf_file, metadata_file):
-                self.log("⚠️  Upload/backup had issues")
+            # Step 5: Upload to Google Drive
+            gdrive_link = self.upload_to_gdrive(pdf_file, metadata_file)
+            if not gdrive_link:
+                self.log("⚠️  Upload had issues")
+            
+            # Step 6: Send notifications
+            if not self.send_notifications(metadata_file, gdrive_link):
+                self.log("⚠️  Notifications had issues")
             
             # Success!
             end_time = datetime.now()

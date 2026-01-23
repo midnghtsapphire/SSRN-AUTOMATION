@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Generated Papers
+output/*.pdf
+output/*.html
+output/*.json
+output/temp_*
+
+# Metadata and Logs
+metadata/*.json
+metadata/*.csv
+metadata/*.txt
+logs/*.log
+
+# Keep directory structure
+!output/.gitkeep
+!metadata/.gitkeep
+!logs/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.sublime-*
+
+# Environment
+.env
+.env.local
+*.key
+*.pem
+
+# System
+Thumbs.db

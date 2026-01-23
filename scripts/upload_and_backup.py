@@ -17,8 +17,8 @@ class PaperUploader:
     def __init__(self):
         self.gdrive_folder_id = "1qVmicFsMOLngIoRIAkeVZNreVblXbLic"
         self.gdrive_config = "/home/ubuntu/.gdrive-rclone.ini"
-        self.github_repo = "midnghtsapphire/SSRN_Whitepapers"
-        self.github_dir = Path("/home/ubuntu/SSRN_Whitepapers")
+        # Papers stored locally in output/ directory only
+        # No GitHub backup of papers (only automation scripts)
         
     def upload_to_gdrive(self, pdf_path):
         """Upload PDF to Google Drive"""
@@ -65,9 +65,9 @@ class PaperUploader:
             print(f"❌ Upload failed: {result.stderr}")
             return False
     
-    def backup_to_github(self, pdf_path, metadata=None):
-        """Backup PDF to GitHub repository"""
-        print(f"\n→ Backing up to GitHub...")
+    def store_locally(self, pdf_path):
+        """Store PDF in local output directory (already there, just verify)"""
+        print(f"\n→ Verifying local storage...")
         
         pdf_path = Path(pdf_path)
         if not pdf_path.exists():
@@ -79,79 +79,11 @@ class PaperUploader:
             print(f"❌ Error: Filename must start with 'Walter_Evans_': {pdf_path.name}")
             return False
         
-        # Clone or pull repository
-        if not self.github_dir.exists():
-            print(f"→ Cloning repository...")
-            result = subprocess.run(
-                ['gh', 'repo', 'clone', self.github_repo, str(self.github_dir)],
-                capture_output=True,
-                text=True
-            )
-            if result.returncode != 0:
-                print(f"❌ Clone failed: {result.stderr}")
-                return False
-        else:
-            print(f"→ Pulling latest changes...")
-            result = subprocess.run(
-                ['git', '-C', str(self.github_dir), 'pull'],
-                capture_output=True,
-                text=True
-            )
+        print(f"✅ Paper stored locally: {pdf_path}")
+        print(f"   Location: {pdf_path.parent}")
+        print(f"   Note: Papers are NOT committed to GitHub (only stored in output/ directory)")
         
-        # Copy PDF to repository
-        import shutil
-        dest_path = self.github_dir / pdf_path.name
-        shutil.copy2(pdf_path, dest_path)
-        print(f"✅ Copied to repository: {dest_path}")
-        
-        # Git add
-        subprocess.run(
-            ['git', '-C', str(self.github_dir), 'add', pdf_path.name],
-            capture_output=True
-        )
-        
-        # Git commit
-        commit_msg = f"Add paper: {pdf_path.name}"
-        if metadata:
-            commit_msg += f"\n\nTitle: {metadata.get('title', 'N/A')}"
-            commit_msg += f"\nDate: {metadata.get('date', 'N/A')}"
-            commit_msg += f"\nKeywords: {metadata.get('keywords', 'N/A')}"
-        
-        result = subprocess.run(
-            ['git', '-C', str(self.github_dir), 'commit', '-m', commit_msg],
-            capture_output=True,
-            text=True
-        )
-        
-        if result.returncode != 0 and 'nothing to commit' not in result.stdout:
-            print(f"❌ Commit failed: {result.stderr}")
-            return False
-        
-        # Git push
-        print(f"→ Pushing to GitHub...")
-        result = subprocess.run(
-            ['git', '-C', str(self.github_dir), 'push'],
-            capture_output=True,
-            text=True
-        )
-        
-        if result.returncode == 0:
-            print(f"✅ Pushed to GitHub: {self.github_repo}")
-            
-            # Get commit hash
-            result = subprocess.run(
-                ['git', '-C', str(self.github_dir), 'log', '-1', '--format=%H'],
-                capture_output=True,
-                text=True
-            )
-            commit_hash = result.stdout.strip()
-            commit_url = f"https://github.com/{self.github_repo}/commit/{commit_hash}"
-            print(f"📎 Commit URL: {commit_url}")
-            
-            return commit_url
-        else:
-            print(f"❌ Push failed: {result.stderr}")
-            return False
+        return str(pdf_path)
     
     def verify_upload(self, filename):
         """Verify file exists in Google Drive"""
@@ -171,9 +103,9 @@ class PaperUploader:
             return False
     
     def process_paper(self, pdf_path, metadata_path=None):
-        """Complete upload and backup process"""
+        """Complete upload process (Google Drive only)"""
         print(f"\n{'='*60}")
-        print("SSRN Paper Upload & Backup")
+        print("SSRN Paper Upload")
         print(f"{'='*60}\n")
         
         pdf_path = Path(pdf_path)
@@ -189,24 +121,24 @@ class PaperUploader:
         # Upload to Google Drive
         gdrive_link = self.upload_to_gdrive(pdf_path)
         
-        # Backup to GitHub
-        github_url = self.backup_to_github(pdf_path, metadata)
+        # Verify local storage
+        local_path = self.store_locally(pdf_path)
         
         # Verify upload
         self.verify_upload(pdf_path.name)
         
         print(f"\n{'='*60}")
-        if gdrive_link and github_url:
-            print("✅ Upload and backup complete!")
+        if gdrive_link and local_path:
+            print("✅ Upload complete!")
             print(f"\nGoogle Drive: {gdrive_link}")
-            print(f"GitHub: {github_url}")
+            print(f"Local Storage: {local_path}")
         else:
-            print("⚠️  Upload or backup incomplete. Please check errors above.")
+            print("⚠️  Upload incomplete. Please check errors above.")
         print(f"{'='*60}\n")
         
         return {
             'gdrive_link': gdrive_link,
-            'github_url': github_url
+            'local_path': local_path
         }
 
 
