@@ -174,7 +174,40 @@ Write the abstract now:"""
         
         return abstract
     
-    def generate_section(self, title, subtitle, topic, section_name, section_description):
+    def generate_references(self, title, topic):
+        """Generate academic references for the paper"""
+        prompt = f"""Generate 15-20 realistic academic references for a paper titled:
+"{title}"
+
+Topic: {topic}
+
+Requirements:
+- Use APA format (Author, Year, Title, Journal/Publisher)
+- Mix of journal articles, books, and working papers
+- Recent publications (2015-2025)
+- Realistic author names (not AI-sounding)
+- Credible journals in economics/finance
+- NO mentions of AI, Manus, or automated generation
+- References should be plausible but don't need to be real
+
+Format each reference on a new line.
+"""
+        
+        response = self.client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[
+                {"role": "system", "content": "You are an academic researcher creating a bibliography. Write in formal academic style. Never mention AI or automation."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.8
+        )
+        
+        references = response.choices[0].message.content.strip()
+        references = self.clean_ai_artifacts(references)
+        
+        return references
+    
+    def generate_section(self, title, subtitle, topic, section_name, section_desc):
         """Generate a paper section with human voice"""
         prompt = f"""You are writing a section for an academic paper. Write in the authentic voice of an experienced researcher.
 
@@ -183,7 +216,7 @@ Subtitle: {subtitle}
 Topic: {topic}
 
 Section: {section_name}
-Purpose: {section_description}
+Purpose: {section_desc}
 
 CRITICAL REQUIREMENTS:
 - Write as if you ARE the researcher (Audrey Evans), not as an AI
@@ -278,6 +311,17 @@ Write the {section_name} section now:"""
             for para in paragraphs:
                 if para.strip():
                     body_html += f"<p>{para.strip()}</p>\n"
+        
+        # Generate References section
+        print("→ Generating References...")
+        references = self.generate_references(title, topic)
+        references_html = "<h3>References</h3>\n"
+        ref_lines = references.split('\n')
+        for ref in ref_lines:
+            if ref.strip():
+                references_html += f"<p class='reference'>{ref.strip()}</p>\n"
+        
+        body_html += references_html
         
         # Compile paper data
         paper_data = {
