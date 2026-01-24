@@ -22,6 +22,34 @@ class SSRNPaperGenerator:
         self.affiliation = "Independent Researcher"
         self.email = "angelreporters@gmail.com"
         
+    def identify_sub_niche(self, main_topic):
+        """Identify a specific sub-niche within the main topic"""
+        prompt = f"""Given this main research topic: "{main_topic}"
+
+Identify ONE specific sub-niche or focused aspect that would make an excellent standalone academic paper.
+
+Requirements:
+- Must be a narrower, more specific aspect of the main topic
+- Should be substantive enough for a full paper
+- Use academic terminology
+- Be specific and concrete
+- Maximum 8 words
+
+Examples:
+- Main: "Climate risk in financial markets" → Sub-niche: "Carbon pricing effects on equity valuations"
+- Main: "Cryptocurrency market microstructure" → Sub-niche: "Order flow toxicity in Bitcoin exchanges"
+- Main: "ESG investing performance" → Sub-niche: "Green bond premium determinants"
+
+Return ONLY the sub-niche topic, nothing else."""
+
+        response = self.client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        
+        return response.choices[0].message.content.strip()
+    
     def generate_contra_title(self, topic):
         """Generate a contra-suggestive title (opposing concepts)"""
         prompt = f"""Generate a compelling academic paper title about {topic} that uses contra-suggestive phrasing (opposing concepts).
@@ -201,11 +229,14 @@ Write the {section_name} section now:"""
         
         return text.strip()
     
-    def generate_full_paper(self, topic):
+    def generate_full_paper(self, topic, paper_type="main", main_topic=None):
         """Generate a complete academic paper"""
+        paper_label = "MAIN PAPER" if paper_type == "main" else "SUB-NICHE PAPER"
         print(f"\n{'='*60}")
-        print("SSRN Paper Generation")
+        print(f"SSRN Paper Generation - {paper_label}")
         print(f"{'='*60}\n")
+        if main_topic and paper_type == "sub-niche":
+            print(f"Main Topic: {main_topic}")
         print(f"Topic: {topic}\n")
         
         # Generate metadata
@@ -268,32 +299,107 @@ Write the {section_name} section now:"""
             "topic": topic
         }
         
-        print("\n✅ Paper generation complete!\n")
+        # Add paper type to metadata
+        paper_data["paper_type"] = paper_type
+        if main_topic and paper_type == "sub-niche":
+            paper_data["main_topic"] = main_topic
+        
+        print(f"\n✅ {paper_label} generation complete!\n")
         
         return paper_data
+
+
+    def generate_main_and_subniche(self, main_topic):
+        """Generate both main paper and sub-niche paper"""
+        print(f"\n{'#'*60}")
+        print("DUAL PAPER GENERATION")
+        print(f"{'#'*60}")
+        print(f"Main Topic: {main_topic}\n")
+        
+        # Identify sub-niche
+        print("→ Identifying sub-niche topic...")
+        sub_niche_topic = self.identify_sub_niche(main_topic)
+        print(f"  Sub-niche: {sub_niche_topic}\n")
+        
+        # Generate main paper
+        print("\n[1/2] Generating MAIN paper...\n")
+        main_paper = self.generate_full_paper(main_topic, paper_type="main")
+        
+        # Generate sub-niche paper
+        print("\n[2/2] Generating SUB-NICHE paper...\n")
+        sub_niche_paper = self.generate_full_paper(sub_niche_topic, paper_type="sub-niche", main_topic=main_topic)
+        
+        return {
+            "main_paper": main_paper,
+            "sub_niche_paper": sub_niche_paper,
+            "main_topic": main_topic,
+            "sub_niche_topic": sub_niche_topic
+        }
 
 
 def main():
     import sys
     
     if len(sys.argv) < 2:
-        print("Usage: python generate_paper.py <topic>")
+        print("Usage: python generate_paper.py <topic> [--dual]")
         sys.exit(1)
+    
+    # Check for dual mode flag
+    dual_mode = '--dual' in sys.argv
+    if dual_mode:
+        sys.argv.remove('--dual')
     
     topic = ' '.join(sys.argv[1:])
     
     generator = SSRNPaperGenerator()
-    paper_data = generator.generate_full_paper(topic)
     
-    # Save paper data as JSON
-    output_dir = Path(__file__).parent.parent / 'output'
-    output_dir.mkdir(exist_ok=True)
-    
-    output_file = output_dir / f"paper_data_{paper_data['date_short']}.json"
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(paper_data, f, indent=2, ensure_ascii=False)
-    
-    print(f"Paper data saved to: {output_file}")
+    if dual_mode:
+        # Generate both main and sub-niche papers
+        result = generator.generate_main_and_subniche(topic)
+        
+        # Save both papers
+        output_dir = Path(__file__).parent.parent / 'output'
+        output_dir.mkdir(exist_ok=True)
+        
+        date_str = result['main_paper']['date_short']
+        
+        # Save main paper
+        main_file = output_dir / f"paper_data_main_{date_str}.json"
+        with open(main_file, 'w', encoding='utf-8') as f:
+            json.dump(result['main_paper'], f, indent=2, ensure_ascii=False)
+        print(f"\n✅ Main paper saved: {main_file}")
+        
+        # Save sub-niche paper
+        sub_file = output_dir / f"paper_data_subniche_{date_str}.json"
+        with open(sub_file, 'w', encoding='utf-8') as f:
+            json.dump(result['sub_niche_paper'], f, indent=2, ensure_ascii=False)
+        print(f"✅ Sub-niche paper saved: {sub_file}")
+        
+        # Save combined metadata
+        meta_file = output_dir / f"dual_papers_meta_{date_str}.json"
+        with open(meta_file, 'w', encoding='utf-8') as f:
+            json.dump({
+                "main_topic": result['main_topic'],
+                "sub_niche_topic": result['sub_niche_topic'],
+                "main_paper_file": str(main_file),
+                "sub_niche_paper_file": str(sub_file),
+                "date": date_str
+            }, f, indent=2, ensure_ascii=False)
+        print(f"✅ Metadata saved: {meta_file}\n")
+        
+    else:
+        # Generate single paper (legacy mode)
+        paper_data = generator.generate_full_paper(topic)
+        
+        # Save paper data as JSON
+        output_dir = Path(__file__).parent.parent / 'output'
+        output_dir.mkdir(exist_ok=True)
+        
+        output_file = output_dir / f"paper_data_{paper_data['date_short']}.json"
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(paper_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"Paper data saved to: {output_file}")
 
 
 if __name__ == '__main__':

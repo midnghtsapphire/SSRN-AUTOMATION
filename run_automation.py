@@ -47,31 +47,34 @@ class SSRNAutomation:
         result = subprocess.run(cmd, capture_output=True, text=True)
         return result
     
-    def generate_paper(self, topic):
-        """Step 1: Generate paper content"""
+    def generate_papers(self, topic):
+        """Step 1: Generate both main and sub-niche papers"""
         self.log(f"{'='*60}")
-        self.log("STEP 1: Generating Paper")
+        self.log("STEP 1: Generating Papers (Main + Sub-Niche)")
         self.log(f"{'='*60}")
         self.log(f"Topic: {topic}")
         
-        result = self.run_script('generate_paper.py', [topic])
+        # Generate with --dual flag
+        result = self.run_script('generate_paper.py', [topic, '--dual'])
         
         if result.returncode != 0:
             self.log(f"❌ Paper generation failed: {result.stderr}")
-            return None
+            return None, None
         
-        # Find the generated JSON file
+        # Find the generated JSON files
         date_str = datetime.now().strftime('%Y%m%d')
-        json_file = self.output_dir / f"paper_data_{date_str}.json"
+        main_json = self.output_dir / f"paper_data_main_{date_str}.json"
+        sub_json = self.output_dir / f"paper_data_subniche_{date_str}.json"
         
-        if not json_file.exists():
-            self.log(f"❌ Paper data file not found: {json_file}")
-            return None
+        if not main_json.exists() or not sub_json.exists():
+            self.log(f"❌ Paper data files not found")
+            return None, None
         
-        self.log(f"✅ Paper generated: {json_file}")
-        return json_file
+        self.log(f"✅ Main paper generated: {main_json}")
+        self.log(f"✅ Sub-niche paper generated: {sub_json}")
+        return main_json, sub_json
     
-    def create_pdf(self, json_file):
+    def create_pdf(self, json_file, paper_type="main"):
         """Step 2: Create PDF from paper data"""
         self.log(f"\n{'='*60}")
         self.log("STEP 2: Creating PDF")
@@ -93,11 +96,12 @@ class SSRNAutomation:
             html_content = html_content.replace(placeholder, str(value))
         
         # Save HTML
-        html_file = self.output_dir / f"paper_{paper_data['date_short']}.html"
+        type_suffix = f"_{paper_type}" if paper_type != "main" else ""
+        html_file = self.output_dir / f"paper{type_suffix}_{paper_data['date_short']}.html"
         with open(html_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
         
-        self.log(f"✅ HTML created: {html_file}")
+        self.log(f"✅ HTML created ({paper_type}): {html_file}")
         
         # Convert to PDF using weasyprint
         # Create short title for filename
@@ -225,54 +229,95 @@ class SSRNAutomation:
         return True
     
     def run_full_workflow(self, topic):
-        """Run complete automation workflow"""
+        """Run complete automation workflow for BOTH main and sub-niche papers"""
         start_time = datetime.now()
         
         self.log(f"\n{'#'*60}")
-        self.log("SSRN PAPER AUTOMATION - FULL WORKFLOW")
+        self.log("SSRN DUAL PAPER AUTOMATION - FULL WORKFLOW")
         self.log(f"{'#'*60}")
         self.log(f"Started: {start_time.strftime('%Y-%m-%d %H:%M:%S')}")
         self.log(f"Topic: {topic}")
         self.log(f"{'#'*60}\n")
         
         try:
-            # Step 1: Generate paper
-            json_file = self.generate_paper(topic)
-            if not json_file:
+            # Step 1: Generate BOTH papers (main + sub-niche)
+            main_json, sub_json = self.generate_papers(topic)
+            if not main_json or not sub_json:
                 raise Exception("Paper generation failed")
             
-            # Step 2: Create PDF
-            pdf_file = self.create_pdf(json_file)
-            if not pdf_file:
-                raise Exception("PDF creation failed")
+            # Step 2: Create PDFs for BOTH papers
+            self.log(f"\n{'='*60}")
+            self.log("STEP 2: Creating PDFs (Main + Sub-Niche)")
+            self.log(f"{'='*60}")
             
-            # Step 3: Quality check
-            if not self.quality_check(pdf_file):
-                self.log("⚠️  Quality check found issues, but continuing...")
+            main_pdf = self.create_pdf(main_json, paper_type="main")
+            if not main_pdf:
+                raise Exception("Main PDF creation failed")
             
-            # Step 4: Extract metadata
-            metadata_file = self.extract_metadata(json_file)
-            if not metadata_file:
+            sub_pdf = self.create_pdf(sub_json, paper_type="subniche")
+            if not sub_pdf:
+                raise Exception("Sub-niche PDF creation failed")
+            
+            # Step 3: Quality check BOTH papers
+            self.log(f"\n{'='*60}")
+            self.log("STEP 3: Quality Check (Main + Sub-Niche)")
+            self.log(f"{'='*60}")
+            
+            self.log("\n→ Checking MAIN paper...")
+            if not self.quality_check(main_pdf):
+                self.log("⚠️  Main paper quality check found issues, but continuing...")
+            
+            self.log("\n→ Checking SUB-NICHE paper...")
+            if not self.quality_check(sub_pdf):
+                self.log("⚠️  Sub-niche paper quality check found issues, but continuing...")
+            
+            # Step 4: Extract metadata for BOTH papers
+            self.log(f"\n{'='*60}")
+            self.log("STEP 4: Extracting Metadata (Main + Sub-Niche)")
+            self.log(f"{'='*60}")
+            
+            main_metadata = self.extract_metadata(main_json)
+            sub_metadata = self.extract_metadata(sub_json)
+            
+            if not main_metadata or not sub_metadata:
                 raise Exception("Metadata extraction failed")
             
-            # Step 5: Upload to Google Drive
-            gdrive_link = self.upload_to_gdrive(pdf_file, metadata_file)
-            if not gdrive_link:
-                self.log("⚠️  Upload had issues")
+            # Step 5: Upload BOTH papers to Google Drive
+            self.log(f"\n{'='*60}")
+            self.log("STEP 5: Upload to Google Drive (Main + Sub-Niche)")
+            self.log(f"{'='*60}")
             
-            # Step 6: Send notifications
-            if not self.send_notifications(metadata_file, gdrive_link):
-                self.log("⚠️  Notifications had issues")
+            main_gdrive_link = self.upload_to_gdrive(main_pdf, main_metadata)
+            sub_gdrive_link = self.upload_to_gdrive(sub_pdf, sub_metadata)
+            
+            if not main_gdrive_link:
+                self.log("⚠️  Main paper upload had issues")
+            if not sub_gdrive_link:
+                self.log("⚠️  Sub-niche paper upload had issues")
+            
+            # Step 6: Send notifications for BOTH papers
+            self.log(f"\n{'='*60}")
+            self.log("STEP 6: Sending Notifications (Main + Sub-Niche)")
+            self.log(f"{'='*60}")
+            
+            self.log("\n→ Notifying for MAIN paper...")
+            if not self.send_notifications(main_metadata, main_gdrive_link):
+                self.log("⚠️  Main paper notifications had issues")
+            
+            self.log("\n→ Notifying for SUB-NICHE paper...")
+            if not self.send_notifications(sub_metadata, sub_gdrive_link):
+                self.log("⚠️  Sub-niche paper notifications had issues")
             
             # Success!
             end_time = datetime.now()
             duration = (end_time - start_time).total_seconds()
             
             self.log(f"\n{'#'*60}")
-            self.log("✅ AUTOMATION COMPLETE!")
+            self.log("✅ DUAL PAPER AUTOMATION COMPLETE!")
             self.log(f"{'#'*60}")
             self.log(f"Duration: {duration:.1f} seconds")
-            self.log(f"Paper: {pdf_file.name}")
+            self.log(f"Main Paper: {main_pdf.name}")
+            self.log(f"Sub-Niche Paper: {sub_pdf.name}")
             self.log(f"{'#'*60}\n")
             
             return True
