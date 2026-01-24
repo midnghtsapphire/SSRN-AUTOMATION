@@ -229,14 +229,11 @@ Write the {section_name} section now:"""
         
         return text.strip()
     
-    def generate_full_paper(self, topic, paper_type="main", main_topic=None):
+    def generate_full_paper(self, topic):
         """Generate a complete academic paper"""
-        paper_label = "MAIN PAPER" if paper_type == "main" else "SUB-NICHE PAPER"
         print(f"\n{'='*60}")
-        print(f"SSRN Paper Generation - {paper_label}")
+        print("SSRN Paper Generation")
         print(f"{'='*60}\n")
-        if main_topic and paper_type == "sub-niche":
-            print(f"Main Topic: {main_topic}")
         print(f"Topic: {topic}\n")
         
         # Generate metadata
@@ -299,12 +296,7 @@ Write the {section_name} section now:"""
             "topic": topic
         }
         
-        # Add paper type to metadata
-        paper_data["paper_type"] = paper_type
-        if main_topic and paper_type == "sub-niche":
-            paper_data["main_topic"] = main_topic
-        
-        print(f"\n✅ {paper_label} generation complete!\n")
+        print("\n✅ Paper generation complete!\n")
         
         return paper_data
 
