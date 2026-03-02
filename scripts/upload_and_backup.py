@@ -38,7 +38,7 @@ class PaperUploader:
         cmd = [
             'rclone', 'copy',
             str(pdf_path),
-            f'manus_google_drive:{self.gdrive_folder_id}',
+            f'gdrive:{self.gdrive_folder_id}',
             '--config', self.gdrive_config
         ]
         
@@ -50,7 +50,7 @@ class PaperUploader:
             # Generate shareable link
             link_cmd = [
                 'rclone', 'link',
-                f'manus_google_drive:{self.gdrive_folder_id}/{pdf_path.name}',
+                f'gdrive:{self.gdrive_folder_id}/{pdf_path.name}',
                 '--config', self.gdrive_config
             ]
             
@@ -89,7 +89,7 @@ class PaperUploader:
         """Verify file exists in Google Drive"""
         cmd = [
             'rclone', 'ls',
-            f'manus_google_drive:{self.gdrive_folder_id}',
+            f'gdrive:{self.gdrive_folder_id}',
             '--config', self.gdrive_config
         ]
         

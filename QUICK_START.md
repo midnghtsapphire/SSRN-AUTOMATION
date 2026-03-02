@@ -84,7 +84,7 @@ cat logs/automation_$(date +%Y%m%d).log
 
 ### Verify Google Drive
 ```bash
-rclone ls manus_google_drive:1qVmicFsMOLngIoRIAkeVZNreVblXbLic --config /home/ubuntu/.gdrive-rclone.ini
+rclone ls gdrive:1qVmicFsMOLngIoRIAkeVZNreVblXbLic --config /home/ubuntu/.gdrive-rclone.ini
 ```
 
 ### Verify GitHub

@@ -187,7 +187,7 @@ Requirements:
 - Recent publications (2015-2025)
 - Realistic author names (not AI-sounding)
 - Credible journals in economics/finance
-- NO mentions of AI, Manus, or automated generation
+- NO mentions of AI or automated generation
 - References should be plausible but don't need to be real
 
 Format each reference on a new line.
@@ -251,7 +251,7 @@ Write the {section_name} section now:"""
             r'it\'s important to note that',
             r'it is worth noting that',
             r'this (?:paper|study|research) was generated',
-            r'(?:manus|ai|automated|auto-generated)',
+            r'(?:|ai|automated|auto-generated)',
         ]
         
         for phrase in ai_phrases:

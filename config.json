@@ -28,7 +28,6 @@
       "JEL Codes"
     ],
     "forbidden_terms": [
-      "manus",
       "ai-generated",
       "artificial intelligence generated",
       "automated",
@@ -58,7 +57,7 @@
   "google_drive": {
     "folder_id": "1qVmicFsMOLngIoRIAkeVZNreVblXbLic",
     "config_path": "/home/ubuntu/.gdrive-rclone.ini",
-    "remote_name": "manus_google_drive"
+    "remote_name": "gdrive"
   },
   "github": {
     "repository": "midnghtsapphire/SSRN-AUTOMATION",
