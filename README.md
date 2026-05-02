@@ -218,3 +218,12 @@ Current version: 1.0.0
 ## License
 
 Private repository - All rights reserved
+
+---
+
+## Test
+
+| Feature | Status |
+|---------|--------|
+| Feature | ✅ Ready |
+
